@@ -18,6 +18,8 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, 
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
+import certifi
+import ssl
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -64,15 +66,36 @@ from .seed_data import CATEGORIES, PRODUCTS, REVIEWS, TESTIMONIALS  # noqa: E402
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
 logger = logging.getLogger("oliviadante")
 
-MONGO_URL = os.environ.get("MONGO_URL") or "mongodb://localhost:27017"
-DB_NAME = os.environ.get("DB_NAME") or "oliviadante_store"
-PUBLIC_BACKEND_URL = (os.environ.get("PUBLIC_BACKEND_URL") or "http://localhost:3002").rstrip("/")
+MONGO_URL = os.environ.get("MONGO_URL", "").strip()
+DB_NAME = os.environ.get("DB_NAME", "").strip() or "oliviadante_store"
+PUBLIC_BACKEND_URL = os.environ.get("PUBLIC_BACKEND_URL", "http://localhost:3002").strip().rstrip("/")
 
-client = AsyncIOMotorClient(
-    MONGO_URL,
-    serverSelectionTimeoutMS=5000,
-    connectTimeoutMS=5000,
-)
+if not MONGO_URL and os.environ.get("RENDER_SERVICE_ID"):
+    raise RuntimeError(
+        "MONGO_URL is required in Render. Set the database connection string in Render environment variables."
+    )
+
+if not MONGO_URL:
+    MONGO_URL = "mongodb://localhost:27017"
+
+client_kwargs = {
+    "serverSelectionTimeoutMS": 15000,
+    "connectTimeoutMS": 10000,
+    "socketTimeoutMS": 20000,
+}
+if ".mongodb.net" in MONGO_URL or MONGO_URL.startswith("mongodb+srv://"):
+    client_kwargs.update(
+        {
+            "tls": True,
+            "ssl": True,
+            "tlsCAFile": certifi.where(),
+            "ssl_cert_reqs": ssl.CERT_REQUIRED,
+            "tlsAllowInvalidCertificates": False,
+            "tlsAllowInvalidHostnames": False,
+        }
+    )
+
+client = AsyncIOMotorClient(MONGO_URL, **client_kwargs)
 db = client[DB_NAME]
 
 app = FastAPI(title="Olivia Dante Art Store API", version="1.0.0")
@@ -784,10 +807,7 @@ async def seed_database():
 
 @app.on_event("startup")
 async def on_startup():
-    try:
-        await seed_database()
-    except Exception as e:
-        logger.exception("Seed error: %s", e)
+    await seed_database()
 
 
 @app.on_event("shutdown")
@@ -796,6 +816,15 @@ async def on_shutdown():
 
 
 # ---------- App config ----------
+
+@app.get("/")
+async def app_root():
+    return {
+        "name": "Olivia Dante Art Store API",
+        "status": "ok",
+        "api_root": "/api/",
+    }
+
 app.include_router(api)
 
 cors_origins = os.environ.get("CORS_ORIGINS", "*").split(",")
