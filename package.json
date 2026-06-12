@@ -1,0 +1,10 @@
+{
+  "name": "olivia-dante-store",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm run build",
+    "install-deps": "cd frontend && npm install"
+  },
+  "description": "Olivia Dante Store - ecommerce platform"
+}
