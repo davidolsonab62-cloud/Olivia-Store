@@ -1,0 +1,20 @@
+services:
+  - type: web_service
+    name: olivia-dante-backend
+    env: python
+    region: oregon
+    branch: main
+    pythonVersion: 3.11
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: python -m uvicorn backend.server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: oliviadante_store
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: PUBLIC_BACKEND_URL
+        value: https://<your-backend-service>.onrender.com
