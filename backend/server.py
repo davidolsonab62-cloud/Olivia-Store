@@ -64,9 +64,9 @@ from .seed_data import CATEGORIES, PRODUCTS, REVIEWS, TESTIMONIALS  # noqa: E402
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
 logger = logging.getLogger("oliviadante")
 
-MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
-DB_NAME = os.environ.get("DB_NAME", "oliviadante_store")
-PUBLIC_BACKEND_URL = os.environ.get("PUBLIC_BACKEND_URL", "http://localhost:3002").rstrip("/")
+MONGO_URL = os.environ.get("MONGO_URL") or "mongodb://localhost:27017"
+DB_NAME = os.environ.get("DB_NAME") or "oliviadante_store"
+PUBLIC_BACKEND_URL = (os.environ.get("PUBLIC_BACKEND_URL") or "http://localhost:3002").rstrip("/")
 
 client = AsyncIOMotorClient(
     MONGO_URL,
