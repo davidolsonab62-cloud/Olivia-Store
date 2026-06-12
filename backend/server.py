@@ -22,7 +22,7 @@ from pydantic import BaseModel, EmailStr
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
-from models import (  # noqa: E402
+from .models import (  # noqa: E402
     Category,
     CategoryCreate,
     CreateOrderRequest,
@@ -49,7 +49,7 @@ from models import (  # noqa: E402
     now_utc,
     serialize_doc,
 )
-from auth import (  # noqa: E402
+from .auth import (  # noqa: E402
     create_access_token,
     get_current_admin,
     get_current_user,
@@ -57,8 +57,8 @@ from auth import (  # noqa: E402
     hash_password,
     verify_password,
 )
-import nowpayments  # noqa: E402
-from seed_data import CATEGORIES, PRODUCTS, REVIEWS, TESTIMONIALS  # noqa: E402
+from . import nowpayments  # noqa: E402
+from .seed_data import CATEGORIES, PRODUCTS, REVIEWS, TESTIMONIALS  # noqa: E402
 
 # ---------- Setup ----------
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
